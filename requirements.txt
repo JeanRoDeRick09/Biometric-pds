@@ -4,18 +4,27 @@ Flask-Bcrypt==1.0.1
 Flask-SQLAlchemy==2.5.1
 gunicorn==20.1.0
 
-qrcode==7.4.2
-pyserial==3.5
+# Supabase
 supabase==1.0.3
 requests==2.31.0
+charset-normalizer==3.0.1
+idna==3.3
+urllib3==1.26.15
+certifi==2022.9.24
 
+# QR generation
+qrcode==7.4.2
+pypng==0.20220715.0
+
+# PostgreSQL support
+psycopg2-binary==2.9.9
+
+# Fingerprint sensor
+adafruit-circuitpython-fingerprint==2.2.19
+pyserial==3.5
+
+# Required by Flask
 Jinja2==3.0.3
 MarkupSafe==2.0.1
 itsdangerous==2.0.1
 Werkzeug==2.1.0
-
-certifi==2022.9.24
-charset-normalizer==3.0.1
-idna==3.3
-urllib3==1.26.15
-psycopg2-binary==2.9.9
