@@ -78,7 +78,7 @@ ptyprocess==0.7.0
 pycairo==1.20.1
 pycryptodomex==3.11.0
 pycups==2.0.1
-pyfingerprint @ file:///home/jean-roderick/pyfingerprint/pyfingerprint/src
+# pyfingerprint @ file:///home/jean-roderick/pyfingerprint/pyfingerprint/src
 pyftdi==0.56.0
 pygame==2.1.2
 Pygments==2.14.0
