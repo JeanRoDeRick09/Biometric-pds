@@ -10,43 +10,46 @@ import adafruit_fingerprint
 app = Flask(__name__)
 enroll_message = ""
 
-# ✅ Supabase PostgreSQL connection
-conn = psycopg2.connect(
-    host="aws-0-ap-south-1.pooler.supabase.com",
-    dbname="postgres",
-    user="postgres.awogngrlvcnjovpiykvy",
-    password="Djean@2909",
-    port=5432,
-    connect_timeout=10,
-    options='-c statement_timeout=10000'
-)
-cursor = conn.cursor()
+# ✅ Safe DB connection helper
+def get_db_conn():
+    return psycopg2.connect(
+        host="aws-0-ap-south-1.pooler.supabase.com",
+        dbname="postgres",
+        user="postgres.awogngrlvcnjovpiykvy",
+        password="Djean@2909",
+        port=5432,
+        connect_timeout=10,
+        options='-c statement_timeout=10000'
+    )
 
-# ✅ Fingerprint sensor setup
+# ✅ Fingerprint setup
 def get_fingerprint_sensor():
     try:
         uart = serial.Serial("/dev/ttyUSB0", baudrate=57600, timeout=1)
         return adafruit_fingerprint.Adafruit_Fingerprint(uart)
     except Exception as e:
-        print("Fingerprint sensor error:", e)
+        print("Sensor error:", e)
         return None
 
 finger = get_fingerprint_sensor()
 
-# ✅ Helper: Get next available fingerprint ID
+# ✅ Get next available fingerprint ID from DB
 def get_next_fingerprint_id():
+    conn = get_db_conn()
+    cursor = conn.cursor()
     cursor.execute("SELECT fingerprint_id FROM members WHERE fingerprint_id IS NOT NULL ORDER BY fingerprint_id")
     used_ids = [row[0] for row in cursor.fetchall()]
     fid = 1
     while fid in used_ids:
         fid += 1
+    cursor.close()
+    conn.close()
     return fid
 
 @app.route('/')
 def home():
     return render_template('index.html')
 
-# ✅ Create family + members (no fingerprint yet)
 @app.route('/create', methods=['GET', 'POST'])
 def create_family():
     if request.method == 'POST':
@@ -56,6 +59,9 @@ def create_family():
         spouse_age = int(request.form['spouse_age'])
         spouse_gender = request.form['spouse_gender']
         no_of_children = int(request.form['no_of_children'])
+
+        conn = get_db_conn()
+        cursor = conn.cursor()
 
         cursor.execute("INSERT INTO family (head, spouse, no_of_children) VALUES (%s, %s, %s) RETURNING id",
                        (head, spouse, no_of_children))
@@ -74,19 +80,26 @@ def create_family():
                            (family_id, cname, cage, cgender))
 
         conn.commit()
+        cursor.close()
+        conn.close()
+
         return redirect(f'/enroll_fingerprints/{family_id}/0')
 
     return render_template('create_family.html')
 
-# ✅ Enroll each member one-by-one
 @app.route('/enroll_fingerprints/<int:family_id>/<int:index>', methods=['GET', 'POST'])
 def enroll_fingerprint_page(family_id, index):
     global enroll_message
+
+    conn = get_db_conn()
+    cursor = conn.cursor()
 
     cursor.execute("SELECT id, name FROM members WHERE family_id = %s ORDER BY id", (family_id,))
     members = cursor.fetchall()
 
     if index >= len(members):
+        cursor.close()
+        conn.close()
         return redirect('/view')
 
     member_id, name = members[index]
@@ -101,27 +114,34 @@ def enroll_fingerprint_page(family_id, index):
         else:
             enroll_message = f"❌ Failed to enroll {name}. Try again."
 
+    cursor.close()
+    conn.close()
+
     return render_template('enroll_fingerprints.html',
                            member_name=name,
                            family_id=family_id,
                            index=index)
 
-# ✅ Retry enrollment for a single member
 @app.route('/enroll_fingerprints_retry/<int:member_id>', methods=['GET', 'POST'])
 def enroll_fingerprint_retry(member_id):
     global enroll_message
+
+    conn = get_db_conn()
+    cursor = conn.cursor()
 
     cursor.execute("SELECT name, fingerprint_id FROM members WHERE id = %s", (member_id,))
     result = cursor.fetchone()
 
     if not result:
+        cursor.close()
+        conn.close()
         return "Member not found", 404
 
     name, existing_fid = result
 
     if request.method == 'POST':
         if existing_fid:
-            fid = existing_fid  # reuse same slot
+            fid = existing_fid
         else:
             fid = get_next_fingerprint_id()
 
@@ -130,13 +150,17 @@ def enroll_fingerprint_retry(member_id):
             cursor.execute("UPDATE members SET fingerprint_id = %s WHERE id = %s", (fid, member_id))
             conn.commit()
             enroll_message = f"✅ {name} enrolled with ID {fid}"
+            cursor.close()
+            conn.close()
             return redirect("/view")
         else:
             enroll_message = f"❌ Failed to enroll {name}. Try again."
 
+    cursor.close()
+    conn.close()
+
     return render_template('retry_fingerprint.html', member_name=name, member_id=member_id)
 
-# ✅ Fingerprint enrollment logic
 def enroll_fingerprint(location, label):
     global enroll_message
     if finger is None:
@@ -179,14 +203,15 @@ def enroll_fingerprint(location, label):
         enroll_message = f"❌ Error: {str(e)}"
         return None
 
-# ✅ Show current fingerprint prompt
 @app.route('/enroll_status')
 def enroll_status():
     return jsonify({'message': enroll_message})
 
-# ✅ View all families
 @app.route('/view')
 def view_family():
+    conn = get_db_conn()
+    cursor = conn.cursor()
+
     cursor.execute("SELECT * FROM family")
     families = cursor.fetchall()
 
@@ -210,9 +235,10 @@ def view_family():
             "qr": qr_base64
         })
 
+    cursor.close()
+    conn.close()
     return render_template('view_family.html', families=family_data)
 
-# ✅ Download QR
 @app.route('/download_qr/<int:family_id>')
 def download_qr(family_id):
     qr = qrcode.make(str(family_id))
@@ -221,14 +247,16 @@ def download_qr(family_id):
     buffer.seek(0)
     return send_file(buffer, mimetype='image/png', as_attachment=True, download_name=f'family_{family_id}_qr.png')
 
-# ✅ Delete a family
 @app.route('/delete/<int:family_id>')
 def delete_family(family_id):
+    conn = get_db_conn()
+    cursor = conn.cursor()
     cursor.execute("DELETE FROM family WHERE id = %s", (family_id,))
     conn.commit()
+    cursor.close()
+    conn.close()
     return redirect('/view')
 
-# ✅ Modify route placeholder
 @app.route('/modify/<int:family_id>')
 def modify_family(family_id):
     return f"<h2>🛠️ Modify page for Family ID {family_id} coming soon...</h2><br><a href='/view'>← Back</a>"
@@ -237,7 +265,5 @@ def modify_family(family_id):
 def about():
     return render_template('about.html')
 
-
-# ✅ Run the server
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
