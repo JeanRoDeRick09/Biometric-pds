@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Retry Fingerprint</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    function pollStatus() {
+      fetch('/enroll_status')
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("status").innerText = data.message;
+        });
+    }
+    setInterval(pollStatus, 1000);
+  </script>
+</head>
+<body>
+  <div class="container" style="text-align:center;">
+    <h2>🔁 Retry Enrollment for: {{ member_name }}</h2>
+
+    <form method="POST">
+      <button type="submit" class="btn">📥 Enroll Fingerprint</button>
+    </form>
+
+    <div id="status" class="status-box">Waiting for input...</div>
+    <a class="btn" href="/view">⬅ Back to Families</a>
+  </div>
+</body>
+</html>

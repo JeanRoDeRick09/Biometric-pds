@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Enroll Fingerprint</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    function pollStatus() {
+      fetch("/enroll_status")
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("status").innerText = data.message;
+        });
+    }
+    setInterval(pollStatus, 1000);
+  </script>
+</head>
+<body>
+  <div class="container" style="text-align:center;">
+    <h2>🔐 Enrolling: {{ member_name }}</h2>
+
+    <form method="POST">
+      <button type="submit" class="btn">📥 Enroll Fingerprint</button>
+    </form>
+
+    <div id="status" class="status-box">Waiting for input...</div>
+
+    <a class="btn" href="/enroll_fingerprints/{{ family_id }}/{{ index | int + 1 }}">➡️ Next Member</a>
+    <a class="btn" href="/view">Skip & View Families</a>
+  </div>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Create Family</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script>
+    function generateChildFields() {
+      const count = document.getElementById("no_of_children").value;
+      const container = document.getElementById("children_fields");
+      container.innerHTML = "";
+
+      for (let i = 0; i < count; i++) {
+        container.innerHTML += `
+          <label>Child ${i + 1} Name:</label>
+          <input type="text" name="child_name_${i}" required>
+
+          <label>Child ${i + 1} Age:</label>
+          <input type="number" name="child_age_${i}" required>
+
+          <label>Child ${i + 1} Gender:</label>
+          <select name="child_gender_${i}" required>
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        `;
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="form-container">
+    <h2>➕ Register a New Family</h2>
+    <form method="POST">
+      <label>Head of Family Name:</label>
+      <input type="text" name="head" required>
+
+      <label>Head Age:</label>
+      <input type="number" name="head_age" required>
+
+      <label>Spouse Name:</label>
+      <input type="text" name="spouse" required>
+
+      <label>Spouse Age:</label>
+      <input type="number" name="spouse_age" required>
+
+      <label>Spouse Gender:</label>
+      <select name="spouse_gender" required>
+        <option value="">Select Gender</option>
+        <option value="Female">Female</option>
+        <option value="Male">Male</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <label>No. of Children:</label>
+      <input type="number" id="no_of_children" name="no_of_children" min="0" required onchange="generateChildFields()">
+
+      <div id="children_fields"></div>
+
+      <button type="submit" class="btn">➡️ Proceed to Enroll</button>
+    </form>
+  </div>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>About the Project</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>📘 About the Project</h1>
+
+    <p>This is a Biometric Public Distribution System (PDS) family enrollment web application. It allows government operators to enroll family members using fingerprint biometrics and manage family records digitally. Each member’s fingerprint is stored using an R307 sensor and matched during POS dispatch.</p>
+
+    <h2>🧪 Tech Stack</h2>
+    <ul>
+      <li><strong>Backend:</strong> Python (Flask)</li>
+      <li><strong>Database:</strong> Supabase PostgreSQL</li>
+      <li><strong>Fingerprint Sensor:</strong> R307 via USB-TTL</li>
+      <li><strong>Frontend:</strong> HTML + CSS (Poppins Font)</li>
+      <li><strong>QR Generation:</strong> Python qrcode library</li>
+      <li><strong>Live Fingerprint Feedback:</strong> JavaScript + Flask JSON polling</li>
+    </ul>
+
+    <h2>🔁 Workflow</h2>
+    <ol>
+      <li>Operator adds family details (head, spouse, children)</li>
+      <li>Each member is enrolled with fingerprint → sensor slot saved</li>
+      <li>QR is generated for family ID (used in POS lookup)</li>
+      <li>In POS: scan fingerprint → match slot → lookup DB → verify dispatch</li>
+    </ol>
+
+    <h2>📈 System Diagram</h2>
+    <img src="{{ url_for('static', filename='workflow.png') }}" style="max-width:100%; border-radius:10px;" alt="Workflow Diagram">
+
+    <div style="text-align:center; margin-top:30px;">
+      <a class="btn" href="/">⬅ Back to Home</a>
+    </div>
+  </div>
+</body>
+</html>

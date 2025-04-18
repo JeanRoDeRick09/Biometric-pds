@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>View Families</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <h1 style="text-align:center;">📋 Registered Families</h1>
+
+  {% for fam in families %}
+    <div class="card">
+      <h2>{{ fam.head }}'s Family (ID: {{ fam.id }})</h2>
+      <p><strong>Spouse:</strong> {{ fam.spouse }}</p>
+      <p><strong>No. of Children:</strong> {{ fam.children }}</p>
+
+      <div class="qr-container">
+        <img class="qr-img" src="data:image/png;base64,{{ fam.qr }}" alt="QR Code">
+        <a class="btn" href="/download_qr/{{ fam.id }}">⬇️ Download QR</a>
+      </div>
+
+      <table>
+        <tr>
+          <th>Name</th>
+          <th>Age</th>
+          <th>Gender</th>
+          <th>Fingerprint</th>
+        </tr>
+        {% for m in fam.members %}
+        <tr>
+          <td>{{ m[1] }}</td>
+          <td>{{ m[2] }}</td>
+          <td>{{ m[3] }}</td>
+          <td>
+            {% if m[4] %}
+              ✅ {{ m[4] }}
+            {% else %}
+              ❌ Not Enrolled
+              <br>
+              <a class="btn" href="/enroll_fingerprints_retry/{{ m[0] }}">🔁 Retry</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+
+      <a class="btn" href="/modify/{{ fam.id }}">✏️ Modify</a>
+      <a class="btn btn-delete" href="/delete/{{ fam.id }}" onclick="return confirm('Delete this family?')">🗑️ Delete</a>
+    </div>
+  {% endfor %}
+
+  <div style="text-align:center;">
+    <a class="btn" href="/">⬅ Back to Home</a>
+  </div>
+</body>
+</html>
