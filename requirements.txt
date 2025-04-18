@@ -18,3 +18,4 @@ certifi==2022.9.24
 charset-normalizer==3.0.1
 idna==3.3
 urllib3==1.26.15
+psycopg2-binary==2.9.9
